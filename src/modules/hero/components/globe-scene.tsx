@@ -1,19 +1,15 @@
-import { Suspense, useRef, useMemo } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { Float, Line } from '@react-three/drei'
+import { Suspense, useRef, useMemo, useState, useCallback } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Float, Line, OrbitControls, Html } from '@react-three/drei'
 import type { Group } from 'three'
 import * as THREE from 'three'
-
-/* ── Wireframe globe with Philippines highlight ───────────────── */
 
 const GLOBE_RADIUS = 1.6
 const GRID_SEGMENTS = 24
 
-/** Lat/lon of Silang, Cavite in radians */
 const SILANG_LAT = (14.2183 / 180) * Math.PI
 const SILANG_LON = (120.9729 / 180) * Math.PI
 
-/** Convert lat/lon to 3D position on sphere */
 function latLonToVec3(lat: number, lon: number, radius: number): THREE.Vector3 {
   return new THREE.Vector3(
     radius * Math.cos(lat) * Math.sin(lon),
@@ -22,15 +18,128 @@ function latLonToVec3(lat: number, lon: number, radius: number): THREE.Vector3 {
   )
 }
 
+const HAZARD_PINS = [
+  { lat: 14.8, lon: 120.5, color: '#7c3aed', label: 'Typhoon',    desc: 'Wind & rain damage' },
+  { lat: 13.8, lon: 121.2, color: '#0284c7', label: 'Flood',       desc: 'Inundation zones' },
+  { lat: 14.5, lon: 121.5, color: '#b45309', label: 'Earthquake',  desc: 'Structural damage' },
+  { lat: 14.0, lon: 120.8, color: '#78716c', label: 'Landslide',   desc: 'Terrain shift' },
+] as const
+
+/* ── Interactive pin ──────────────────────────────────────────── */
+function HazardPin({ lat, lon, color, label, desc }: typeof HAZARD_PINS[number]): JSX.Element {
+  const [hovered, setHovered] = useState(false)
+  const meshRef = useRef<THREE.Mesh>(null)
+  const pinPos = useMemo(() => latLonToVec3(lat * Math.PI / 180, lon * Math.PI / 180, GLOBE_RADIUS * 1.02), [lat, lon])
+  const stalkEnd = useMemo(() => latLonToVec3(lat * Math.PI / 180, lon * Math.PI / 180, GLOBE_RADIUS * 1.18), [lat, lon])
+
+  /* Animate pin scale on hover */
+  useFrame((_, delta) => {
+    if (!meshRef.current) return
+    const target = hovered ? 1.8 : 1
+    meshRef.current.scale.lerp(new THREE.Vector3(target, target, target), 1 - Math.pow(0.001, delta))
+  })
+
+  return (
+    <group>
+      {/* Stalk line from surface to pin head */}
+      <Line
+        points={[
+          [pinPos.x, pinPos.y, pinPos.z],
+          [stalkEnd.x, stalkEnd.y, stalkEnd.z],
+        ]}
+        color={color}
+        transparent
+        opacity={hovered ? 0.8 : 0.3}
+        lineWidth={hovered ? 2 : 1}
+      />
+
+      {/* Pin base ring on surface */}
+      <mesh position={pinPos}>
+        <ringGeometry args={[0.03, 0.045, 16]} />
+        <meshStandardMaterial
+          color={color} emissive={color} emissiveIntensity={hovered ? 3 : 1}
+          transparent opacity={0.6} side={THREE.DoubleSide} toneMapped={false}
+        />
+      </mesh>
+
+      {/* Pin head sphere */}
+      <mesh
+        ref={meshRef}
+        position={stalkEnd}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+      >
+        <sphereGeometry args={[0.04, 12, 12]} />
+        <meshStandardMaterial
+          color={color} emissive={color}
+          emissiveIntensity={hovered ? 4 : 2}
+          toneMapped={false}
+        />
+      </mesh>
+
+      {/* Glow ring around pin head */}
+      {hovered && (
+        <mesh position={stalkEnd}>
+          <ringGeometry args={[0.06, 0.09, 20]} />
+          <meshStandardMaterial
+            color={color} emissive={color} emissiveIntensity={3}
+            transparent opacity={0.4} side={THREE.DoubleSide} toneMapped={false}
+          />
+        </mesh>
+      )}
+
+      {/* HTML tooltip on hover */}
+      {hovered && (
+        <Html position={stalkEnd} center style={{ pointerEvents: 'none' }}>
+          <div
+            style={{
+              background: 'rgba(12,15,26,0.92)',
+              backdropFilter: 'blur(12px)',
+              border: `1px solid ${color}50`,
+              borderRadius: 8,
+              padding: '8px 12px',
+              whiteSpace: 'nowrap',
+              transform: 'translateY(-40px)',
+            }}
+          >
+            <div style={{ fontSize: 11, fontWeight: 700, color, fontFamily: "'JetBrains Mono', monospace" }}>
+              {label}
+            </div>
+            <div style={{ fontSize: 9, color: '#94a3b8', fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>
+              {desc}
+            </div>
+          </div>
+        </Html>
+      )}
+    </group>
+  )
+}
+
+/* ── Atmosphere glow ──────────────────────────────────────────── */
+function AtmosphereGlow(): JSX.Element {
+  return (
+    <mesh>
+      <sphereGeometry args={[GLOBE_RADIUS * 1.12, 32, 32]} />
+      <meshStandardMaterial
+        color="#00d4ff"
+        transparent
+        opacity={0.035}
+        side={THREE.BackSide}
+      />
+    </mesh>
+  )
+}
+
+/* ── Globe with interaction ───────────────────────────────────── */
 function WireframeGlobe(): JSX.Element {
   const globeRef = useRef<Group>(null)
+  const [isDragging, setIsDragging] = useState(false)
 
   useFrame((_, delta) => {
-    if (!globeRef.current) return
+    if (!globeRef.current || isDragging) return
     globeRef.current.rotation.y += delta * 0.06
   })
 
-  /* Philippines approximate outline points (simplified) */
   const phPoints = useMemo((): [number, number, number][] => {
     const coords = [
       [18.5, 120.5], [17.0, 121.5], [16.0, 120.8], [15.0, 121.2],
@@ -47,99 +156,90 @@ function WireframeGlobe(): JSX.Element {
   const silangPos = useMemo(() => latLonToVec3(SILANG_LAT, SILANG_LON, GLOBE_RADIUS * 1.01), [])
 
   return (
-    <group ref={globeRef} rotation={[0.1, -SILANG_LON + 0.3, 0]}>
-      {/* Wireframe sphere */}
-      <mesh>
-        <sphereGeometry args={[GLOBE_RADIUS, GRID_SEGMENTS, GRID_SEGMENTS]} />
-        <meshStandardMaterial
-          color="#00d4ff"
-          wireframe
-          transparent
-          opacity={0.06}
-        />
-      </mesh>
-
-      {/* Solid dark inner sphere */}
-      <mesh>
-        <sphereGeometry args={[GLOBE_RADIUS * 0.99, 32, 32]} />
-        <meshStandardMaterial color="#0c0f1a" />
-      </mesh>
-
-      {/* Latitude lines with accent */}
-      {[-30, -15, 0, 15, 30, 45, 60].map((lat) => (
-        <mesh key={`lat-${lat}`} rotation={[0, 0, 0]} position={[0, GLOBE_RADIUS * Math.sin(lat * Math.PI / 180), 0]}>
-          <ringGeometry args={[
-            GLOBE_RADIUS * Math.cos(lat * Math.PI / 180) - 0.002,
-            GLOBE_RADIUS * Math.cos(lat * Math.PI / 180) + 0.002,
-            64,
-          ]} />
-          <meshBasicMaterial
-            color="#00d4ff"
-            transparent
-            opacity={lat === 15 ? 0.15 : 0.04}
-            side={THREE.DoubleSide}
-          />
+    <>
+      <group ref={globeRef} rotation={[0.1, -SILANG_LON + 0.3, 0]}>
+        {/* Wireframe sphere */}
+        <mesh>
+          <sphereGeometry args={[GLOBE_RADIUS, GRID_SEGMENTS, GRID_SEGMENTS]} />
+          <meshStandardMaterial color="#00d4ff" wireframe transparent opacity={0.06} />
         </mesh>
-      ))}
 
-      {/* Philippines highlight line */}
-      <Line points={phPoints} color="#00d4ff" transparent opacity={0.5} lineWidth={1.5} />
-
-      {/* Silang marker — pulsing dot */}
-      <Float speed={2} floatIntensity={0.05}>
-        <mesh position={silangPos}>
-          <sphereGeometry args={[0.04, 12, 12]} />
-          <meshStandardMaterial
-            color="#00d4ff"
-            emissive="#00d4ff"
-            emissiveIntensity={3}
-            toneMapped={false}
-          />
+        {/* Inner dark sphere */}
+        <mesh>
+          <sphereGeometry args={[GLOBE_RADIUS * 0.99, 32, 32]} />
+          <meshStandardMaterial color="#0c0f1a" />
         </mesh>
-      </Float>
 
-      {/* Silang glow ring */}
-      <mesh position={silangPos} rotation={[silangPos.x > 0 ? -0.2 : 0.2, 0.3, 0]}>
-        <ringGeometry args={[0.06, 0.08, 24]} />
-        <meshStandardMaterial
-          color="#00d4ff"
-          emissive="#00d4ff"
-          emissiveIntensity={2}
-          transparent
-          opacity={0.5}
-          side={THREE.DoubleSide}
-          toneMapped={false}
-        />
-      </mesh>
-
-      {/* Hazard type indicator pins */}
-      {[
-        { lat: 14.8, lon: 120.5, color: '#7c3aed' },  // Typhoon
-        { lat: 13.8, lon: 121.2, color: '#0284c7' },  // Flood
-        { lat: 14.5, lon: 121.5, color: '#b45309' },  // Earthquake
-        { lat: 14.0, lon: 120.8, color: '#78716c' },  // Landslide
-      ].map((pin, pinIndex) => {
-        const pinPos = latLonToVec3(pin.lat * Math.PI / 180, pin.lon * Math.PI / 180, GLOBE_RADIUS * 1.015)
-        return (
-          <mesh key={pinIndex} position={pinPos}>
-            <sphereGeometry args={[0.025, 8, 8]} />
-            <meshStandardMaterial
-              color={pin.color}
-              emissive={pin.color}
-              emissiveIntensity={2}
-              toneMapped={false}
-            />
+        {/* Latitude lines */}
+        {[-30, -15, 0, 15, 30, 45, 60].map((lat) => (
+          <mesh key={`lat-${lat}`} position={[0, GLOBE_RADIUS * Math.sin(lat * Math.PI / 180), 0]}>
+            <ringGeometry args={[
+              GLOBE_RADIUS * Math.cos(lat * Math.PI / 180) - 0.002,
+              GLOBE_RADIUS * Math.cos(lat * Math.PI / 180) + 0.002, 64,
+            ]} />
+            <meshBasicMaterial color="#00d4ff" transparent opacity={lat === 15 ? 0.15 : 0.04} side={THREE.DoubleSide} />
           </mesh>
-        )
-      })}
-    </group>
+        ))}
+
+        {/* Philippines outline */}
+        <Line points={phPoints} color="#00d4ff" transparent opacity={0.5} lineWidth={1.5} />
+
+        {/* Silang marker */}
+        <Float speed={2} floatIntensity={0.05}>
+          <mesh position={silangPos}>
+            <sphereGeometry args={[0.05, 12, 12]} />
+            <meshStandardMaterial color="#00d4ff" emissive="#00d4ff" emissiveIntensity={3} toneMapped={false} />
+          </mesh>
+        </Float>
+
+        {/* Silang glow ring */}
+        <mesh position={silangPos}>
+          <ringGeometry args={[0.07, 0.10, 24]} />
+          <meshStandardMaterial
+            color="#00d4ff" emissive="#00d4ff" emissiveIntensity={2}
+            transparent opacity={0.4} side={THREE.DoubleSide} toneMapped={false}
+          />
+        </mesh>
+
+        {/* Silang label */}
+        <Html position={[silangPos.x, silangPos.y + 0.14, silangPos.z]} center style={{ pointerEvents: 'none' }}>
+          <div style={{
+            fontSize: 9, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700,
+            color: '#00d4ff', textShadow: '0 0 8px rgba(0,212,255,0.6)',
+            whiteSpace: 'nowrap',
+          }}>
+            SILANG
+          </div>
+        </Html>
+
+        {/* Hazard pins */}
+        {HAZARD_PINS.map((pin) => (
+          <HazardPin key={pin.label} {...pin} />
+        ))}
+
+        <AtmosphereGlow />
+      </group>
+
+      {/* OrbitControls — drag to rotate */}
+      <OrbitControls
+        enableZoom={true}
+        enablePan={false}
+        minDistance={3}
+        maxDistance={7}
+        autoRotate={false}
+        dampingFactor={0.08}
+        enableDamping
+        onStart={() => setIsDragging(true)}
+        onEnd={() => setIsDragging(false)}
+      />
+    </>
   )
 }
 
 /* ── Exported scene ───────────────────────────────────────────── */
 export function GlobeScene(): JSX.Element {
   return (
-    <div className="w-full h-[320px] lg:h-[380px]">
+    <div className="w-full h-[320px] lg:h-[400px] cursor-grab active:cursor-grabbing">
       <Canvas
         camera={{ position: [0, 0, 4.2], fov: 40 }}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
@@ -147,7 +247,7 @@ export function GlobeScene(): JSX.Element {
         style={{ background: 'transparent' }}
       >
         <Suspense fallback={null}>
-          <ambientLight intensity={0.1} />
+          <ambientLight intensity={0.12} />
           <directionalLight position={[5, 3, 5]} intensity={0.6} color="#eef2ff" />
           <pointLight position={[-3, -2, 4]} intensity={0.3} color="#00d4ff" distance={10} />
 
