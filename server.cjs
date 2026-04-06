@@ -18,23 +18,33 @@ const MIME = {
   '.woff2':'font/woff2',
 }
 
+const indexHtml = readFileSync(join(DIST, 'index.html'))
+
 const server = createServer((req, res) => {
-  let filePath = join(DIST, req.url === '/' ? 'index.html' : req.url)
+  const url = req.url.split('?')[0]
 
-  if (!existsSync(filePath) || !extname(filePath)) {
-    filePath = join(DIST, 'index.html')
+  // API requests should NOT fall through to SPA — return proper error
+  if (url.startsWith('/api')) {
+    res.writeHead(502, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ message: 'Backend API not available. Deploy the backend service.' }))
+    return
   }
 
-  try {
-    const data = readFileSync(filePath)
-    const ext = extname(filePath)
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' })
-    res.end(data)
-  } catch {
-    const html = readFileSync(join(DIST, 'index.html'))
-    res.writeHead(200, { 'Content-Type': 'text/html' })
-    res.end(html)
+  const filePath = join(DIST, url)
+
+  if (url !== '/' && existsSync(filePath) && extname(filePath)) {
+    try {
+      const data = readFileSync(filePath)
+      const ext = extname(filePath)
+      res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' })
+      res.end(data)
+      return
+    } catch { /* fall through to SPA */ }
   }
+
+  // SPA fallback for all non-API, non-file routes
+  res.writeHead(200, { 'Content-Type': 'text/html' })
+  res.end(indexHtml)
 })
 
 server.listen(PORT, '0.0.0.0', () => {
