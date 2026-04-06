@@ -53,9 +53,11 @@ function HazardPin({ lat, lon, color, label, desc }: typeof HAZARD_PINS[number])
   return (
     <group>
       {/* Stalk line */}
-      <lineSegments geometry={lineGeo}>
-        <lineBasicMaterial color={color} transparent opacity={hovered ? 0.7 : 0.25} />
-      </lineSegments>
+      {useMemo(() => {
+        const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.4 })
+        const lineObj = new THREE.LineSegments(lineGeo, mat)
+        return <primitive object={lineObj} />
+      }, [lineGeo, color])}
 
       {/* Pin base dot on surface */}
       <mesh position={pinPos}>
@@ -171,16 +173,14 @@ function WireframeGlobe(): JSX.Element {
           </mesh>
         ))}
 
-        {/* Philippines outline — manual line geometry */}
+        {/* Philippines outline */}
         {useMemo(() => {
           const geo = new THREE.BufferGeometry()
           const flat = new Float32Array(phPoints.flat())
           geo.setAttribute('position', new THREE.BufferAttribute(flat, 3))
-          return (
-            <line geometry={geo}>
-              <lineBasicMaterial color="#00d4ff" transparent opacity={0.5} />
-            </line>
-          )
+          const mat = new THREE.LineBasicMaterial({ color: '#00d4ff', transparent: true, opacity: 0.5 })
+          const lineObj = new THREE.Line(geo, mat)
+          return <primitive object={lineObj} />
         }, [phPoints])}
 
         {/* Silang marker */}
