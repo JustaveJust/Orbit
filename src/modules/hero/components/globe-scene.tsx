@@ -1,6 +1,7 @@
-import { Suspense, useRef, useMemo, useState } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { Float, OrbitControls, Html } from '@react-three/drei'
+import { Suspense, useRef, useMemo, useState, useEffect } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Float, Html } from '@react-three/drei'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { Group } from 'three'
 import * as THREE from 'three'
 
@@ -122,6 +123,33 @@ function AtmosphereGlow(): JSX.Element {
   )
 }
 
+/* ── Manual OrbitControls (avoids drei version crash) ─────────── */
+function GlobeControls({ onDragStart, onDragEnd }: { readonly onDragStart: () => void; readonly onDragEnd: () => void }): null {
+  const { camera, gl } = useThree()
+  useEffect(() => {
+    const controls = new OrbitControls(camera, gl.domElement)
+    controls.enableZoom = true
+    controls.enablePan = false
+    controls.minDistance = 2.2
+    controls.maxDistance = 5.5
+    controls.enableDamping = true
+    controls.dampingFactor = 0.08
+    controls.addEventListener('start', onDragStart)
+    controls.addEventListener('end', onDragEnd)
+
+    const animate = (): void => { controls.update(); requestAnimationFrame(animate) }
+    const frame = requestAnimationFrame(animate)
+
+    return () => {
+      cancelAnimationFrame(frame)
+      controls.removeEventListener('start', onDragStart)
+      controls.removeEventListener('end', onDragEnd)
+      controls.dispose()
+    }
+  }, [camera, gl, onDragStart, onDragEnd])
+  return null
+}
+
 /* ── Globe with interaction ───────────────────────────────────── */
 function WireframeGlobe(): JSX.Element {
   const globeRef = useRef<Group>(null)
@@ -219,18 +247,7 @@ function WireframeGlobe(): JSX.Element {
         <AtmosphereGlow />
       </group>
 
-      {/* OrbitControls — drag to rotate */}
-      <OrbitControls
-        enableZoom={true}
-        enablePan={false}
-        minDistance={2.2}
-        maxDistance={5.5}
-        autoRotate={false}
-        dampingFactor={0.08}
-        enableDamping
-        onStart={() => setIsDragging(true)}
-        onEnd={() => setIsDragging(false)}
-      />
+      <GlobeControls onDragStart={() => setIsDragging(true)} onDragEnd={() => setIsDragging(false)} />
     </>
   )
 }
