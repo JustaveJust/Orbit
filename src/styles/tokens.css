@@ -1,0 +1,62 @@
+/* ================================================================
+   SATELLITE SENTINEL — Design Contract
+   Precision Dark aesthetic — Linear/Vercel-style clarity
+   ================================================================ */
+
+:root {
+  /* ── Canvas & Surface (subtle elevation, not dramatic) ── */
+  --color-canvas:          #0c0f1a;   /* deep navy — not pure black */
+  --color-surface:         #101524;   /* sidebar, topbar */
+  --color-surface-raised:  #161d30;   /* cards, panels */
+  --color-surface-overlay: #1c2540;   /* hover states, dropdowns */
+  --color-glass:           rgba(16, 21, 36, 0.80);
+
+  /* ── Borders (barely visible — elevation through bg, not borders) ── */
+  --color-border:          rgba(255, 255, 255, 0.07);
+  --color-border-strong:   rgba(255, 255, 255, 0.12);
+
+  /* ── Brand Accent (cyber teal — used sparingly) ── */
+  --color-accent:          #00c8f0;   /* slightly desaturated teal — less neon */
+  --color-accent-dim:      rgba(0, 200, 240, 0.10);
+  --color-accent-subtle:   rgba(0, 200, 240, 0.05);
+
+  /* ── Damage Level Colors ── */
+  --color-undamaged:       #22c55e;
+  --color-minor:           #eab308;
+  --color-major:           #f97316;
+  --color-destroyed:       #ef4444;
+
+  /* ── Disaster Type Colors ── */
+  --color-typhoon:         #8b5cf6;
+  --color-landslide:       #78716c;
+  --color-earthquake:      #f59e0b;
+  --color-flood:           #0ea5e9;
+
+  /* ── Text (4 levels of hierarchy) ── */
+  --color-text-primary:    #eef2ff;   /* headlines, key data */
+  --color-text-secondary:  #94a3b8;   /* body, labels */
+  --color-text-muted:      #4b5670;   /* hints, metadata */
+  --color-text-accent:     #00c8f0;   /* accent highlights only */
+
+  /* ── Shadows (elevation cues, not glow) ── */
+  --shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md:   0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg:   0 12px 40px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.35);
+
+  /* ── Border Radius ── */
+  --radius-sm:   5px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 9999px;
+
+  /* ── Fonts ── */
+  --font-display: 'Orbitron', 'Space Grotesk', sans-serif;
+  --font-body:    'Inter', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  /* ── Layout ── */
+  --sidebar-width:  240px;
+  --topbar-height:  56px;
+}

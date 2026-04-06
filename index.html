@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SatelliteSentinel — AI Disaster Assessment | Silang, Cavite</title>
+    <meta name="description" content="AI-driven satellite damage assessment system for Silang, Cavite, Philippines. Deep learning analysis of typhoon, flood, earthquake, and volcanic disaster impacts." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+      * { box-sizing: border-box; }
+      html, body, #root { height: 100%; margin: 0; }
+      body { background: #0a0e1a; color: #f0f4ff; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+      .leaflet-container { background: #0d1426 !important; }
+      .leaflet-tile-pane { transition: filter 0.3s ease; }
+      .map-dark .leaflet-tile-pane { filter: brightness(0.85) saturate(0.8) hue-rotate(190deg); }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
