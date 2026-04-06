@@ -1,6 +1,6 @@
-import { Suspense, useRef, useMemo, useState, useCallback } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Float, Line, OrbitControls, Html } from '@react-three/drei'
+import { Suspense, useRef, useMemo, useState } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
+import { Float, OrbitControls, Html } from '@react-three/drei'
 import type { Group } from 'three'
 import * as THREE from 'three'
 
@@ -27,21 +27,11 @@ const HAZARD_PINS = [
 ] as const
 
 /* ── Interactive pin ──────────────────────────────────────────── */
-/** Compute a quaternion that orients a flat geometry to face outward from globe center */
-function surfaceQuaternion(position: THREE.Vector3): THREE.Quaternion {
-  const up = new THREE.Vector3(0, 0, 1)
-  const normal = position.clone().normalize()
-  const quat = new THREE.Quaternion()
-  quat.setFromUnitVectors(up, normal)
-  return quat
-}
-
 function HazardPin({ lat, lon, color, label, desc }: typeof HAZARD_PINS[number]): JSX.Element {
   const [hovered, setHovered] = useState(false)
   const meshRef = useRef<THREE.Mesh>(null)
   const pinPos = useMemo(() => latLonToVec3(lat * Math.PI / 180, lon * Math.PI / 180, GLOBE_RADIUS * 1.005), [lat, lon])
-  const stalkEnd = useMemo(() => latLonToVec3(lat * Math.PI / 180, lon * Math.PI / 180, GLOBE_RADIUS * 1.08), [lat, lon])
-  const ringQuat = useMemo(() => surfaceQuaternion(pinPos), [pinPos])
+  const stalkEnd = useMemo(() => latLonToVec3(lat * Math.PI / 180, lon * Math.PI / 180, GLOBE_RADIUS * 1.06), [lat, lon])
 
   useFrame((_, delta) => {
     if (!meshRef.current) return
@@ -49,27 +39,28 @@ function HazardPin({ lat, lon, color, label, desc }: typeof HAZARD_PINS[number])
     meshRef.current.scale.lerp(new THREE.Vector3(target, target, target), 1 - Math.pow(0.001, delta))
   })
 
+  /* Build a simple line geometry manually to avoid drei Line issues */
+  const lineGeo = useMemo(() => {
+    const geo = new THREE.BufferGeometry()
+    const positions = new Float32Array([
+      pinPos.x, pinPos.y, pinPos.z,
+      stalkEnd.x, stalkEnd.y, stalkEnd.z,
+    ])
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    return geo
+  }, [pinPos, stalkEnd])
+
   return (
     <group>
-      {/* Stalk line from surface to pin head */}
-      <Line
-        points={[
-          [pinPos.x, pinPos.y, pinPos.z],
-          [stalkEnd.x, stalkEnd.y, stalkEnd.z],
-        ]}
-        color={color}
-        transparent
-        opacity={hovered ? 0.8 : 0.3}
-        lineWidth={hovered ? 2 : 1}
-      />
+      {/* Stalk line */}
+      <lineSegments geometry={lineGeo}>
+        <lineBasicMaterial color={color} transparent opacity={hovered ? 0.7 : 0.25} />
+      </lineSegments>
 
-      {/* Pin base ring — oriented tangent to globe surface */}
-      <mesh position={pinPos} quaternion={ringQuat}>
-        <ringGeometry args={[0.01, 0.018, 16]} />
-        <meshStandardMaterial
-          color={color} emissive={color} emissiveIntensity={hovered ? 3 : 1}
-          transparent opacity={0.6} side={THREE.DoubleSide} toneMapped={false}
-        />
+      {/* Pin base dot on surface */}
+      <mesh position={pinPos}>
+        <sphereGeometry args={[0.008, 8, 8]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={1.5} toneMapped={false} />
       </mesh>
 
       {/* Pin head sphere */}
@@ -79,24 +70,13 @@ function HazardPin({ lat, lon, color, label, desc }: typeof HAZARD_PINS[number])
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
       >
-        <sphereGeometry args={[0.02, 10, 10]} />
+        <sphereGeometry args={[0.018, 10, 10]} />
         <meshStandardMaterial
           color={color} emissive={color}
           emissiveIntensity={hovered ? 4 : 2}
           toneMapped={false}
         />
       </mesh>
-
-      {/* Glow ring around pin head — oriented outward */}
-      {hovered && (
-        <mesh position={stalkEnd} quaternion={ringQuat}>
-          <ringGeometry args={[0.03, 0.045, 16]} />
-          <meshStandardMaterial
-            color={color} emissive={color} emissiveIntensity={3}
-            transparent opacity={0.4} side={THREE.DoubleSide} toneMapped={false}
-          />
-        </mesh>
-      )}
 
       {/* HTML tooltip on hover */}
       {hovered && (
@@ -107,15 +87,15 @@ function HazardPin({ lat, lon, color, label, desc }: typeof HAZARD_PINS[number])
               backdropFilter: 'blur(12px)',
               border: `1px solid ${color}50`,
               borderRadius: 8,
-              padding: '8px 12px',
+              padding: '6px 10px',
               whiteSpace: 'nowrap',
-              transform: 'translateY(-40px)',
+              transform: 'translateY(-30px)',
             }}
           >
-            <div style={{ fontSize: 11, fontWeight: 700, color, fontFamily: "'JetBrains Mono', monospace" }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color, fontFamily: "'JetBrains Mono', monospace" }}>
               {label}
             </div>
-            <div style={{ fontSize: 9, color: '#94a3b8', fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>
+            <div style={{ fontSize: 8, color: '#94a3b8', fontFamily: "'JetBrains Mono', monospace", marginTop: 1 }}>
               {desc}
             </div>
           </div>
@@ -191,8 +171,17 @@ function WireframeGlobe(): JSX.Element {
           </mesh>
         ))}
 
-        {/* Philippines outline */}
-        <Line points={phPoints} color="#00d4ff" transparent opacity={0.6} lineWidth={2.5} />
+        {/* Philippines outline — manual line geometry */}
+        {useMemo(() => {
+          const geo = new THREE.BufferGeometry()
+          const flat = new Float32Array(phPoints.flat())
+          geo.setAttribute('position', new THREE.BufferAttribute(flat, 3))
+          return (
+            <line geometry={geo}>
+              <lineBasicMaterial color="#00d4ff" transparent opacity={0.5} />
+            </line>
+          )
+        }, [phPoints])}
 
         {/* Silang marker */}
         <Float speed={2} floatIntensity={0.02}>
@@ -202,12 +191,12 @@ function WireframeGlobe(): JSX.Element {
           </mesh>
         </Float>
 
-        {/* Silang glow ring — oriented tangent to surface */}
-        <mesh position={silangPos} quaternion={surfaceQuaternion(silangPos)}>
-          <ringGeometry args={[0.035, 0.05, 20]} />
+        {/* Silang glow halo */}
+        <mesh position={silangPos}>
+          <sphereGeometry args={[0.045, 12, 12]} />
           <meshStandardMaterial
-            color="#00d4ff" emissive="#00d4ff" emissiveIntensity={2}
-            transparent opacity={0.3} side={THREE.DoubleSide} toneMapped={false}
+            color="#00d4ff" emissive="#00d4ff" emissiveIntensity={1.5}
+            transparent opacity={0.15} toneMapped={false}
           />
         </mesh>
 
