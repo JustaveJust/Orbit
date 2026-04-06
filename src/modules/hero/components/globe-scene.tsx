@@ -6,6 +6,7 @@ import * as THREE from 'three'
 
 const GLOBE_RADIUS = 1.6
 const GRID_SEGMENTS = 24
+/* Camera is zoomed in closer + globe rotated so Philippines fills ~40% of view */
 
 const SILANG_LAT = (14.2183 / 180) * Math.PI
 const SILANG_LON = (120.9729 / 180) * Math.PI
@@ -19,18 +20,18 @@ function latLonToVec3(lat: number, lon: number, radius: number): THREE.Vector3 {
 }
 
 const HAZARD_PINS = [
-  { lat: 14.8, lon: 120.5, color: '#7c3aed', label: 'Typhoon',    desc: 'Wind & rain damage' },
-  { lat: 13.8, lon: 121.2, color: '#0284c7', label: 'Flood',       desc: 'Inundation zones' },
-  { lat: 14.5, lon: 121.5, color: '#b45309', label: 'Earthquake',  desc: 'Structural damage' },
-  { lat: 14.0, lon: 120.8, color: '#78716c', label: 'Landslide',   desc: 'Terrain shift' },
+  { lat: 17.5, lon: 120.0, color: '#7c3aed', label: 'Typhoon',    desc: 'Wind & rain damage' },
+  { lat: 11.0, lon: 123.5, color: '#0284c7', label: 'Flood',       desc: 'Inundation zones' },
+  { lat: 7.0,  lon: 126.5, color: '#b45309', label: 'Earthquake',  desc: 'Structural damage' },
+  { lat: 13.0, lon: 118.5, color: '#78716c', label: 'Landslide',   desc: 'Terrain shift' },
 ] as const
 
 /* ── Interactive pin ──────────────────────────────────────────── */
 function HazardPin({ lat, lon, color, label, desc }: typeof HAZARD_PINS[number]): JSX.Element {
   const [hovered, setHovered] = useState(false)
   const meshRef = useRef<THREE.Mesh>(null)
-  const pinPos = useMemo(() => latLonToVec3(lat * Math.PI / 180, lon * Math.PI / 180, GLOBE_RADIUS * 1.02), [lat, lon])
-  const stalkEnd = useMemo(() => latLonToVec3(lat * Math.PI / 180, lon * Math.PI / 180, GLOBE_RADIUS * 1.18), [lat, lon])
+  const pinPos = useMemo(() => latLonToVec3(lat * Math.PI / 180, lon * Math.PI / 180, GLOBE_RADIUS * 1.005), [lat, lon])
+  const stalkEnd = useMemo(() => latLonToVec3(lat * Math.PI / 180, lon * Math.PI / 180, GLOBE_RADIUS * 1.08), [lat, lon])
 
   /* Animate pin scale on hover */
   useFrame((_, delta) => {
@@ -55,7 +56,7 @@ function HazardPin({ lat, lon, color, label, desc }: typeof HAZARD_PINS[number])
 
       {/* Pin base ring on surface */}
       <mesh position={pinPos}>
-        <ringGeometry args={[0.03, 0.045, 16]} />
+        <ringGeometry args={[0.01, 0.018, 16]} />
         <meshStandardMaterial
           color={color} emissive={color} emissiveIntensity={hovered ? 3 : 1}
           transparent opacity={0.6} side={THREE.DoubleSide} toneMapped={false}
@@ -69,7 +70,7 @@ function HazardPin({ lat, lon, color, label, desc }: typeof HAZARD_PINS[number])
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
       >
-        <sphereGeometry args={[0.04, 12, 12]} />
+        <sphereGeometry args={[0.02, 10, 10]} />
         <meshStandardMaterial
           color={color} emissive={color}
           emissiveIntensity={hovered ? 4 : 2}
@@ -80,7 +81,7 @@ function HazardPin({ lat, lon, color, label, desc }: typeof HAZARD_PINS[number])
       {/* Glow ring around pin head */}
       {hovered && (
         <mesh position={stalkEnd}>
-          <ringGeometry args={[0.06, 0.09, 20]} />
+          <ringGeometry args={[0.03, 0.045, 16]} />
           <meshStandardMaterial
             color={color} emissive={color} emissiveIntensity={3}
             transparent opacity={0.4} side={THREE.DoubleSide} toneMapped={false}
@@ -157,7 +158,7 @@ function WireframeGlobe(): JSX.Element {
 
   return (
     <>
-      <group ref={globeRef} rotation={[0.1, -SILANG_LON + 0.3, 0]}>
+      <group ref={globeRef} rotation={[0.05, -SILANG_LON + 0.15, 0]}>
         {/* Wireframe sphere */}
         <mesh>
           <sphereGeometry args={[GLOBE_RADIUS, GRID_SEGMENTS, GRID_SEGMENTS]} />
@@ -182,31 +183,31 @@ function WireframeGlobe(): JSX.Element {
         ))}
 
         {/* Philippines outline */}
-        <Line points={phPoints} color="#00d4ff" transparent opacity={0.5} lineWidth={1.5} />
+        <Line points={phPoints} color="#00d4ff" transparent opacity={0.6} lineWidth={2.5} />
 
         {/* Silang marker */}
-        <Float speed={2} floatIntensity={0.05}>
+        <Float speed={2} floatIntensity={0.02}>
           <mesh position={silangPos}>
-            <sphereGeometry args={[0.05, 12, 12]} />
+            <sphereGeometry args={[0.025, 10, 10]} />
             <meshStandardMaterial color="#00d4ff" emissive="#00d4ff" emissiveIntensity={3} toneMapped={false} />
           </mesh>
         </Float>
 
         {/* Silang glow ring */}
         <mesh position={silangPos}>
-          <ringGeometry args={[0.07, 0.10, 24]} />
+          <ringGeometry args={[0.035, 0.05, 20]} />
           <meshStandardMaterial
             color="#00d4ff" emissive="#00d4ff" emissiveIntensity={2}
-            transparent opacity={0.4} side={THREE.DoubleSide} toneMapped={false}
+            transparent opacity={0.3} side={THREE.DoubleSide} toneMapped={false}
           />
         </mesh>
 
         {/* Silang label */}
-        <Html position={[silangPos.x, silangPos.y + 0.14, silangPos.z]} center style={{ pointerEvents: 'none' }}>
+        <Html position={[silangPos.x, silangPos.y + 0.08, silangPos.z]} center style={{ pointerEvents: 'none' }}>
           <div style={{
-            fontSize: 9, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700,
-            color: '#00d4ff', textShadow: '0 0 8px rgba(0,212,255,0.6)',
-            whiteSpace: 'nowrap',
+            fontSize: 7, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700,
+            color: '#00d4ff', textShadow: '0 0 6px rgba(0,212,255,0.5)',
+            whiteSpace: 'nowrap', letterSpacing: '0.1em',
           }}>
             SILANG
           </div>
@@ -224,8 +225,8 @@ function WireframeGlobe(): JSX.Element {
       <OrbitControls
         enableZoom={true}
         enablePan={false}
-        minDistance={3}
-        maxDistance={7}
+        minDistance={2.2}
+        maxDistance={5.5}
         autoRotate={false}
         dampingFactor={0.08}
         enableDamping
@@ -241,7 +242,7 @@ export function GlobeScene(): JSX.Element {
   return (
     <div className="w-full h-[320px] lg:h-[400px] cursor-grab active:cursor-grabbing">
       <Canvas
-        camera={{ position: [0, 0, 4.2], fov: 40 }}
+        camera={{ position: [0, 0.3, 2.8], fov: 40 }}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
         dpr={[1, 2]}
         style={{ background: 'transparent' }}
