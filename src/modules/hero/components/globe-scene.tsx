@@ -27,16 +27,25 @@ const HAZARD_PINS = [
 ] as const
 
 /* ── Interactive pin ──────────────────────────────────────────── */
+/** Compute a quaternion that orients a flat geometry to face outward from globe center */
+function surfaceQuaternion(position: THREE.Vector3): THREE.Quaternion {
+  const up = new THREE.Vector3(0, 0, 1)
+  const normal = position.clone().normalize()
+  const quat = new THREE.Quaternion()
+  quat.setFromUnitVectors(up, normal)
+  return quat
+}
+
 function HazardPin({ lat, lon, color, label, desc }: typeof HAZARD_PINS[number]): JSX.Element {
   const [hovered, setHovered] = useState(false)
   const meshRef = useRef<THREE.Mesh>(null)
   const pinPos = useMemo(() => latLonToVec3(lat * Math.PI / 180, lon * Math.PI / 180, GLOBE_RADIUS * 1.005), [lat, lon])
   const stalkEnd = useMemo(() => latLonToVec3(lat * Math.PI / 180, lon * Math.PI / 180, GLOBE_RADIUS * 1.08), [lat, lon])
+  const ringQuat = useMemo(() => surfaceQuaternion(pinPos), [pinPos])
 
-  /* Animate pin scale on hover */
   useFrame((_, delta) => {
     if (!meshRef.current) return
-    const target = hovered ? 1.8 : 1
+    const target = hovered ? 1.6 : 1
     meshRef.current.scale.lerp(new THREE.Vector3(target, target, target), 1 - Math.pow(0.001, delta))
   })
 
@@ -54,8 +63,8 @@ function HazardPin({ lat, lon, color, label, desc }: typeof HAZARD_PINS[number])
         lineWidth={hovered ? 2 : 1}
       />
 
-      {/* Pin base ring on surface */}
-      <mesh position={pinPos}>
+      {/* Pin base ring — oriented tangent to globe surface */}
+      <mesh position={pinPos} quaternion={ringQuat}>
         <ringGeometry args={[0.01, 0.018, 16]} />
         <meshStandardMaterial
           color={color} emissive={color} emissiveIntensity={hovered ? 3 : 1}
@@ -78,9 +87,9 @@ function HazardPin({ lat, lon, color, label, desc }: typeof HAZARD_PINS[number])
         />
       </mesh>
 
-      {/* Glow ring around pin head */}
+      {/* Glow ring around pin head — oriented outward */}
       {hovered && (
-        <mesh position={stalkEnd}>
+        <mesh position={stalkEnd} quaternion={ringQuat}>
           <ringGeometry args={[0.03, 0.045, 16]} />
           <meshStandardMaterial
             color={color} emissive={color} emissiveIntensity={3}
@@ -193,8 +202,8 @@ function WireframeGlobe(): JSX.Element {
           </mesh>
         </Float>
 
-        {/* Silang glow ring */}
-        <mesh position={silangPos}>
+        {/* Silang glow ring — oriented tangent to surface */}
+        <mesh position={silangPos} quaternion={surfaceQuaternion(silangPos)}>
           <ringGeometry args={[0.035, 0.05, 20]} />
           <meshStandardMaterial
             color="#00d4ff" emissive="#00d4ff" emissiveIntensity={2}
