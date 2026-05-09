@@ -40,9 +40,9 @@ const DATASETS = [
 ]
 
 const TEAM = [
-  { name: 'Harlley Dave B. Cañada', role: 'Lead Researcher · ML Engineer',   initials: 'HC', color: '#7c3aed' },
-  { name: 'Mykhylla Pesidas',       role: 'GIS Analyst · Backend Developer',  initials: 'MP', color: '#00d4ff' },
-  { name: 'Sophia Elyze P. Umandal', role: 'Signal Processing · UI/UX Design', initials: 'SU', color: '#22c55e' },
+  { name: 'Harlley Dave B. Cañada', initials: 'HC', color: '#7c3aed' },
+  { name: 'Mykhylla Pesidas',       initials: 'MP', color: '#00d4ff' },
+  { name: 'Sophia Elyze P. Umandal', initials: 'SU', color: '#22c55e' },
 ]
 
 const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const
@@ -124,7 +124,6 @@ function TiltCard({ member, delay }: { readonly member: typeof TEAM[number]; rea
 
       <div className="relative">
         <p className="font-display font-bold text-[--color-text-primary] text-sm">{member.name}</p>
-        <p className="text-[10px] font-mono mt-0.5" style={{ color: `${member.color}b0` }}>{member.role}</p>
       </div>
 
       <div
