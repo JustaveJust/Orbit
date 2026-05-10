@@ -218,14 +218,14 @@ export function DashboardPage() {
             }}
           >
             {DAMAGE_LEVELS.map((d) => (
-              <div key={d.label} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ background: d.color }} />
-                <span className="text-[11px] text-[--color-text-secondary]">{d.label}</span>
+              <div key={d.label} className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full" style={{ background: d.color }} />
+                <span className="text-[10px] text-[--color-text-muted]">{d.label}</span>
               </div>
             ))}
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-[#4a5568]" />
-              <span className="text-[11px] text-[--color-text-secondary]">No data</span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-[#4a5568]" />
+              <span className="text-[10px] text-[--color-text-muted]">No data</span>
             </div>
           </motion.div>
         </div>
