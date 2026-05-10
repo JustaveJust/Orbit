@@ -107,53 +107,6 @@ export function DashboardPage() {
         />
       </motion.div>
 
-      {/* ── Event alert strip (moved out of map) ── */}
-      <AnimatePresence mode="wait" initial={false}>
-        {selectedDisaster && (
-          <motion.div
-            key={selectedDisaster.id}
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ ease: EASE_PREMIUM, duration: 0.32 }}
-            className="flex-shrink-0 overflow-hidden border-b border-[--color-border]"
-          >
-            <div
-              className="flex items-center gap-3 px-5 py-2.5"
-              style={{
-                background: `${selectedDisaster.severityColor}10`,
-                color:      selectedDisaster.severityColor,
-              }}
-            >
-              {/* Pulsing indicator dot */}
-              <div className="relative flex items-center justify-center w-3 h-3 shrink-0">
-                <div
-                  className="absolute inset-0 rounded-full"
-                  style={{
-                    background: `${selectedDisaster.severityColor}50`,
-                    animation: 'ripple-expand 2.5s ease-out infinite',
-                  }}
-                />
-                <div
-                  className="relative w-1.5 h-1.5 rounded-full z-10"
-                  style={{ background: selectedDisaster.severityColor }}
-                />
-              </div>
-              <span className="text-xs font-medium font-display">{selectedDisaster.severity}</span>
-              <span className="text-xs opacity-40">·</span>
-              <span className="text-xs font-medium text-[--color-text-primary]">{selectedDisaster.name}</span>
-              <span className="text-xs opacity-40">·</span>
-              <span className="text-xs text-[--color-text-secondary]">
-                {new Date(selectedDisaster.eventDate).toLocaleDateString('en-PH', {
-                  year: 'numeric', month: 'short', day: 'numeric',
-                })}
-              </span>
-              <span className="ml-auto text-lg">{selectedDisaster.typeIcon}</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* ── Empty state: no disasters ── */}
       {!loadingInit && !initError && disasters.length === 0 && (
         <div className="flex-1 flex items-center justify-center p-8">
@@ -236,6 +189,66 @@ export function DashboardPage() {
           className="w-72 xl:w-80 flex-shrink-0 border-l border-[--color-border] overflow-y-auto flex flex-col gap-4 p-4"
           style={{ background: 'var(--color-surface)' }}
         >
+          {/* Event alert card — top of right panel */}
+          <AnimatePresence mode="wait" initial={false}>
+            {selectedDisaster && (
+              <motion.div
+                key={selectedDisaster.id}
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ ease: EASE_PREMIUM, duration: 0.32 }}
+                className="rounded-xl p-3.5 space-y-2 relative overflow-hidden shrink-0"
+                style={{
+                  background: `${selectedDisaster.severityColor}10`,
+                  border:     `1px solid ${selectedDisaster.severityColor}30`,
+                }}
+              >
+                {/* Top accent line */}
+                <div
+                  className="absolute top-0 left-0 right-0 h-px"
+                  style={{ background: `linear-gradient(90deg, transparent, ${selectedDisaster.severityColor}90, transparent)` }}
+                />
+
+                {/* Severity row + icon */}
+                <div className="flex items-center gap-2">
+                  <div className="relative flex items-center justify-center w-3 h-3 shrink-0">
+                    <div
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        background: `${selectedDisaster.severityColor}50`,
+                        animation: 'ripple-expand 2.5s ease-out infinite',
+                      }}
+                    />
+                    <div
+                      className="relative w-1.5 h-1.5 rounded-full z-10"
+                      style={{ background: selectedDisaster.severityColor }}
+                    />
+                  </div>
+                  <span
+                    className="text-[10px] font-mono font-bold uppercase tracking-[0.18em]"
+                    style={{ color: selectedDisaster.severityColor }}
+                  >
+                    {selectedDisaster.severity}
+                  </span>
+                  <span className="ml-auto text-xl leading-none">{selectedDisaster.typeIcon}</span>
+                </div>
+
+                {/* Disaster name */}
+                <p className="text-sm font-display font-semibold text-[--color-text-primary] leading-tight">
+                  {selectedDisaster.name}
+                </p>
+
+                {/* Date */}
+                <p className="text-[10px] font-mono text-[--color-text-muted]">
+                  {new Date(selectedDisaster.eventDate).toLocaleDateString('en-PH', {
+                    year: 'numeric', month: 'short', day: 'numeric',
+                  })}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* SITREP panel header */}
           <div
             className="flex items-center justify-between py-1 border-b relative"
