@@ -329,6 +329,7 @@ export function SilangMap({ barangays, assessments, isLoading }: SilangMapProps)
       style={{ background: '#0a0e1a' }}
       zoomControl={true}
       scrollWheelZoom={true}
+      doubleClickZoom={false}
     >
       <MapRecenter lat={CENTER[0]} lng={CENTER[1]} zoom={ZOOM} />
 
