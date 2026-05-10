@@ -90,7 +90,7 @@ export function CredibilitySection(): JSX.Element {
               ))}
             </div>
             <p className="text-[10px] font-mono text-[--color-text-muted] mt-3">
-              Adviser: Mr. Cereneo S. Santigo Jr.
+              Adviser: Beverly A. Malabag
             </p>
           </div>
 

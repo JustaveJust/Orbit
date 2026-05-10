@@ -6,7 +6,6 @@ import {
   SatelliteDish,
   Activity,
   FileBarChart2,
-  BookOpen,
   ChevronLeft,
 } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
@@ -16,7 +15,6 @@ const NAV_LINKS = [
   { to: '/analysis',    label: 'Image Analysis', icon: SatelliteDish,   desc: 'Before / After'     },
   { to: '/signals',     label: 'Signal Monitor', icon: Activity,        desc: 'Sensor Feed'        },
   { to: '/report',      label: 'Damage Report',  icon: FileBarChart2,   desc: 'All Barangays'      },
-  { to: '/methodology', label: 'Methodology',    icon: BookOpen,        desc: 'Research & Methods' },
 ] as const
 
 const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const

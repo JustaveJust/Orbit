@@ -5,7 +5,6 @@ import { DashboardPage } from '@/modules/dashboard/screens/dashboard-page'
 import { ImageAnalysisPage } from '@/modules/image-analysis/screens/image-analysis-page'
 import { SignalMonitorPage } from '@/modules/signal-monitor/screens/signal-monitor-page'
 import { DamageReportPage } from '@/modules/damage-report/screens/damage-report-page'
-import { MethodologyPage } from '@/modules/methodology/screens/methodology-page'
 
 export function AppRouter() {
   return (
@@ -17,7 +16,6 @@ export function AppRouter() {
           <Route path="/analysis"    element={<ImageAnalysisPage />} />
           <Route path="/signals"     element={<SignalMonitorPage />} />
           <Route path="/report"      element={<DamageReportPage />} />
-          <Route path="/methodology" element={<MethodologyPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

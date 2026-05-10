@@ -11,11 +11,11 @@ import { KpiCardStrip } from '../components/kpi-card-strip'
 import { LiveSignalPanel } from '../components/live-signal-panel'
 import { SilangMap } from '../components/silang-map'
 
+/* Dashboard collapses 4-tier damage into 3 (Major absorbs Destroyed) for the layperson view */
 const DAMAGE_LEVELS = [
   { color: '#22c55e', label: 'Undamaged' },
   { color: '#eab308', label: 'Minor'     },
   { color: '#f97316', label: 'Major'     },
-  { color: '#ef4444', label: 'Destroyed' },
 ]
 
 /* Status items derived from actual state — not hardcoded fiction */
@@ -218,14 +218,14 @@ export function DashboardPage() {
             }}
           >
             {DAMAGE_LEVELS.map((d) => (
-              <div key={d.label} className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full" style={{ background: d.color }} />
-                <span className="text-[10px] text-[--color-text-muted]">{d.label}</span>
+              <div key={d.label} className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full" style={{ background: d.color }} />
+                <span className="text-[11px] text-[--color-text-secondary]">{d.label}</span>
               </div>
             ))}
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-[#4a5568]" />
-              <span className="text-[10px] text-[--color-text-muted]">No data</span>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-[#4a5568]" />
+              <span className="text-[11px] text-[--color-text-secondary]">No data</span>
             </div>
           </motion.div>
         </div>
@@ -289,10 +289,9 @@ export function DashboardPage() {
                   style={{ background: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}
                 >
                   {[
-                    { label: 'Undamaged', value: summary.undamagedCount, color: '#22c55e' },
-                    { label: 'Minor',     value: summary.minorCount,     color: '#eab308' },
-                    { label: 'Major',     value: summary.majorCount,     color: '#f97316' },
-                    { label: 'Destroyed', value: summary.destroyedCount, color: '#ef4444' },
+                    { label: 'Undamaged', value: summary.undamagedCount,                          color: '#22c55e' },
+                    { label: 'Minor',     value: summary.minorCount,                              color: '#eab308' },
+                    { label: 'Major',     value: summary.majorCount + summary.destroyedCount,     color: '#f97316' },
                   ].map((item, idx) => (
                     <motion.div
                       key={item.label}

@@ -23,12 +23,6 @@ export function HeroFooter(): JSX.Element {
 
         <div className="flex items-center gap-5 text-[11px] font-mono text-[--color-text-muted]">
           <Link
-            to="/methodology"
-            className="hover:text-[--color-accent] transition-colors"
-          >
-            Methodology
-          </Link>
-          <Link
             to="/dashboard"
             className="hover:text-[--color-accent] transition-colors"
           >
