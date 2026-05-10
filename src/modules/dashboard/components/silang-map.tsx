@@ -330,6 +330,10 @@ export function SilangMap({ barangays, assessments, isLoading }: SilangMapProps)
       zoomControl={true}
       scrollWheelZoom={true}
       doubleClickZoom={false}
+      dragging={true}
+      touchZoom={true}
+      inertia={true}
+      keyboard={true}
     >
       <MapRecenter lat={CENTER[0]} lng={CENTER[1]} zoom={ZOOM} />
 

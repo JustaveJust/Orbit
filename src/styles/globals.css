@@ -235,6 +235,27 @@ body {
    Leaflet Map Overrides
    ================================================================ */
 
+/* Cross-browser drag/touch hardening — Chrome, Safari (incl. iOS), Firefox, Edge.
+   Reasserts Leaflet's own defaults with !important so no parent / utility class
+   can break dragging via touch-action: pan-* or user-select: text. */
+.leaflet-container {
+  touch-action: none !important;
+  -ms-touch-action: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none;       /* iOS: suppress long-press callout */
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: contain;       /* prevent page bounce on iOS Safari */
+}
+
+/* Cursor states — Leaflet sets these via classes, force them in case of overrides */
+.leaflet-grab        { cursor: grab; }
+.leaflet-dragging,
+.leaflet-dragging .leaflet-grab,
+.leaflet-dragging .leaflet-interactive { cursor: grabbing !important; }
+
 .leaflet-popup-content-wrapper {
   background: rgba(16, 21, 36, 0.95) !important;
   backdrop-filter: blur(16px) !important;
