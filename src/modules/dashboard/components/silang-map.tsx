@@ -25,7 +25,7 @@ const DAMAGE_LABEL: Record<string, string> = {
   UNDAMAGED: 'No Damage',
   MINOR:     'Minor Damage',
   MAJOR:     'Major Damage',
-  DESTROYED: 'Destroyed', // kept for type-completeness; collapsed to MAJOR for display
+  DESTROYED: 'Major Damage', // collapsed to MAJOR for display via displayLevel()
 }
 
 /* Dashboard collapses DESTROYED into MAJOR for display only — type system stays 4-tier */

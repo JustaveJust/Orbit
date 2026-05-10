@@ -5,11 +5,11 @@ import { motion } from 'framer-motion'
 
 const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const
 
+/* Display layer collapses 4-tier damage into 3 — Major represents major + destroyed */
 const DAMAGE_CLASSES = [
   { label: 'Undamaged', color: '#22c55e' },
   { label: 'Minor',     color: '#eab308' },
   { label: 'Major',     color: '#f97316' },
-  { label: 'Destroyed', color: '#ef4444' },
 ] as const
 
 const PIPELINE_ITEMS = [

@@ -11,7 +11,7 @@ export const DAMAGE_LABELS: Record<DamageLevel, string> = {
   UNDAMAGED: 'Undamaged',
   MINOR:     'Minor Damage',
   MAJOR:     'Major Damage',
-  DESTROYED: 'Destroyed',
+  DESTROYED: 'Major Damage', // collapsed for display — see displayLevel() in screens
 }
 
 export function damageLevelToColor(level: DamageLevel): string {

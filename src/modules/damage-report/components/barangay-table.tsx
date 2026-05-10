@@ -1,7 +1,11 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
+import type { DamageLevel } from '@/core/types/assessment.types'
 import { DamageAssessmentDto } from '@/core/types/assessment.types'
 import { damageLevelToColor } from '@/shared/utils/damage-colors'
+
+/* Display layer collapses DESTROYED into MAJOR — type/data still 4-tier */
+const displayLevel = (lvl: DamageLevel): DamageLevel => (lvl === 'DESTROYED' ? 'MAJOR' : lvl)
 
 interface BarangayTableProps {
   readonly assessments: ReadonlyArray<DamageAssessmentDto>
@@ -32,7 +36,7 @@ export function BarangayTable({ assessments }: BarangayTableProps) {
     const filtered = filter
       ? assessments.filter((a) =>
           a.barangayName.toLowerCase().includes(filter.toLowerCase()) ||
-          a.damageLevel.toLowerCase().includes(filter.toLowerCase())
+          displayLevel(a.damageLevel).toLowerCase().includes(filter.toLowerCase())
         )
       : assessments
 
@@ -92,8 +96,9 @@ export function BarangayTable({ assessments }: BarangayTableProps) {
           </thead>
           <tbody>
             {sorted.map((a, i) => {
-              const color = damageLevelToColor(a.damageLevel)
-              const isHighSeverity = a.damageLevel === 'DESTROYED' || a.damageLevel === 'MAJOR'
+              const shownLevel = displayLevel(a.damageLevel)
+              const color = damageLevelToColor(shownLevel)
+              const isHighSeverity = shownLevel === 'MAJOR'
               return (
                 <motion.tr
                   key={a.id}
@@ -124,7 +129,7 @@ export function BarangayTable({ assessments }: BarangayTableProps) {
                         boxShadow: isHighSeverity ? `0 0 8px ${color}25` : undefined,
                       }}
                     >
-                      {a.damageLevel}
+                      {shownLevel}
                     </span>
                   </td>
                   <td className="py-2 px-3 tabular-nums" style={{ color }}>

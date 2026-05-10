@@ -9,11 +9,11 @@ import { Skeleton } from '@/shared/ui/loading-skeleton'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
+/* Display layer collapses 4-tier damage into 3 — Major absorbs Destroyed count */
 const DAMAGE_LEVELS = [
-  { level: 'UNDAMAGED', label: 'No Damage',    color: '#22c55e' },
-  { level: 'MINOR',     label: 'Minor',         color: '#eab308' },
-  { level: 'MAJOR',     label: 'Major',         color: '#f97316' },
-  { level: 'DESTROYED', label: 'Destroyed',     color: '#ef4444' },
+  { level: 'UNDAMAGED', label: 'No Damage', color: '#22c55e' },
+  { level: 'MINOR',     label: 'Minor',     color: '#eab308' },
+  { level: 'MAJOR',     label: 'Major',     color: '#f97316' },
 ] as const
 
 /* Methodology stages — static representation of the research pipeline, not live processing */
@@ -106,12 +106,14 @@ export function ImageAnalysisPage() {
   const confidence = summary?.avgAiConfidence ?? 0
 
   const breakdown = summary
-    ? [
-        { level: 'UNDAMAGED', count: summary.undamagedCount, pct: total > 0 ? (summary.undamagedCount / total) * 100 : 0 },
-        { level: 'MINOR',     count: summary.minorCount,     pct: total > 0 ? (summary.minorCount     / total) * 100 : 0 },
-        { level: 'MAJOR',     count: summary.majorCount,     pct: total > 0 ? (summary.majorCount     / total) * 100 : 0 },
-        { level: 'DESTROYED', count: summary.destroyedCount, pct: total > 0 ? (summary.destroyedCount / total) * 100 : 0 },
-      ]
+    ? (() => {
+        const majorMerged = summary.majorCount + summary.destroyedCount
+        return [
+          { level: 'UNDAMAGED', count: summary.undamagedCount, pct: total > 0 ? (summary.undamagedCount / total) * 100 : 0 },
+          { level: 'MINOR',     count: summary.minorCount,     pct: total > 0 ? (summary.minorCount     / total) * 100 : 0 },
+          { level: 'MAJOR',     count: majorMerged,            pct: total > 0 ? (majorMerged            / total) * 100 : 0 },
+        ]
+      })()
     : []
 
   const sourceLabel = dataSourceLabel(selected?.disasterType)
@@ -420,13 +422,13 @@ export function ImageAnalysisPage() {
           {/* 2×2 chip grid */}
           {loadData
             ? (
-              <div className="grid grid-cols-2 gap-1.5">
-                {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-8 rounded-lg" />)}
+              <div className="grid grid-cols-3 gap-1.5">
+                {[1, 2, 3].map((i) => <Skeleton key={i} className="h-8 rounded-lg" />)}
               </div>
             )
             : breakdown.length > 0
             ? (
-              <div className="grid grid-cols-2 gap-1.5">
+              <div className="grid grid-cols-3 gap-1.5">
                 {breakdown.map((b, idx) => {
                   const info = DAMAGE_LEVELS.find((d) => d.level === b.level)!
                   return (
@@ -466,7 +468,7 @@ export function ImageAnalysisPage() {
               </div>
             )
             : (
-              <div className="grid grid-cols-2 gap-1.5">
+              <div className="grid grid-cols-3 gap-1.5">
                 {DAMAGE_LEVELS.map(({ level, label, color }) => (
                   <div
                     key={level}

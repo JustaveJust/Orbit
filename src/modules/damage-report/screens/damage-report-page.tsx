@@ -8,7 +8,7 @@ import { SeverityPieChart } from '../components/severity-pie-chart'
 import { BarangayTable } from '../components/barangay-table'
 import { Skeleton } from '@/shared/ui/loading-skeleton'
 import { StatCounter } from '@/shared/ui/stat-counter'
-import { FileBarChart2, Building2, Users, AlertTriangle, Skull } from 'lucide-react'
+import { FileBarChart2, Building2, Users, AlertTriangle, AlertOctagon } from 'lucide-react'
 
 const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const
 
@@ -55,10 +55,10 @@ export function DamageReportPage(): JSX.Element {
   const selected = disasters.find((d) => d.id === selectedId)
 
   const KPI_ITEMS = summary ? [
-    { value: summary.totalStructuresAssessed, label: 'Structures Assessed', unit: '',  color: '#00d4ff', icon: Building2 },
-    { value: summary.totalPopulationAffected, label: 'Population Affected', unit: '',  color: '#7c3aed', icon: Users },
-    { value: Math.round(summary.avgDamagePercent), label: 'Avg Damage',     unit: '%', color: '#f97316', icon: AlertTriangle },
-    { value: summary.destroyedCount,           label: 'Destroyed',          unit: '',  color: '#ef4444', icon: Skull },
+    { value: summary.totalStructuresAssessed,                label: 'Structures Assessed', unit: '',  color: '#00d4ff', icon: Building2 },
+    { value: summary.totalPopulationAffected,                label: 'Population Affected', unit: '',  color: '#7c3aed', icon: Users },
+    { value: Math.round(summary.avgDamagePercent),           label: 'Avg Damage',          unit: '%', color: '#f59e0b', icon: AlertTriangle },
+    { value: summary.majorCount + summary.destroyedCount,    label: 'Major Damage',        unit: '',  color: '#f97316', icon: AlertOctagon },
   ] : []
 
   return (

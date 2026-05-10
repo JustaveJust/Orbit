@@ -5,11 +5,11 @@ interface SeverityPieChartProps {
   readonly summary: SummaryDto
 }
 
+/* Display layer collapses 4-tier damage into 3 — Major absorbs Destroyed count */
 const ENTRIES = [
-  { key: 'undamagedCount', label: 'Undamaged', color: '#22c55e' },
-  { key: 'minorCount',     label: 'Minor',     color: '#eab308' },
-  { key: 'majorCount',     label: 'Major',     color: '#f97316' },
-  { key: 'destroyedCount', label: 'Destroyed', color: '#ef4444' },
+  { label: 'Undamaged', color: '#22c55e', value: (s: SummaryDto) => s.undamagedCount                    },
+  { label: 'Minor',     color: '#eab308', value: (s: SummaryDto) => s.minorCount                        },
+  { label: 'Major',     color: '#f97316', value: (s: SummaryDto) => s.majorCount + s.destroyedCount     },
 ] as const
 
 interface TooltipPayloadEntry {
@@ -39,7 +39,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 
 export function SeverityPieChart({ summary }: SeverityPieChartProps) {
   const data = ENTRIES
-    .map((e) => ({ name: e.label, value: summary[e.key], color: e.color }))
+    .map((e) => ({ name: e.label, value: e.value(summary), color: e.color }))
     .filter((d) => d.value > 0)
 
   const totalAffected = summary.majorCount + summary.destroyedCount
@@ -82,11 +82,11 @@ export function SeverityPieChart({ summary }: SeverityPieChartProps) {
 
       {/* Center text overlay */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-        <p className="font-display text-3xl font-black tabular-nums" style={{ color: '#ef4444' }}>
+        <p className="font-display text-3xl font-black tabular-nums" style={{ color: '#f97316' }}>
           {totalAffected}
         </p>
         <p className="text-[9px] font-mono text-[--color-text-muted] uppercase tracking-widest mt-0.5">
-          HIGH SEVERITY
+          MAJOR DAMAGE
         </p>
       </div>
 
